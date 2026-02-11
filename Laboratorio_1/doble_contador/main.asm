@@ -29,7 +29,7 @@ SETUP:
 	 // Ponemos el reloj a 1 MHz 
     LDI R20, (1 << CLKPCE)
     STS CLKPR, R20
-    LDI R20, 0b0000_0100
+    LDI R20, 0b0000_0111
     STS CLKPR, R20
 
     // Configuración del port B
