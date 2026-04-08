@@ -28,7 +28,7 @@ al_min_d:       .byte 1
 al_hr_u:        .byte 1
 al_hr_d:        .byte 1
 // --- Variables de Control ---
-estado:         .byte 1     // 0=Hora, 1=Fecha, 2=Conf Hora, 3=Conf Fecha, 4=Conf Alarma
+estado:         .byte 1     // 0=Hora, 1= conf Hora, 2= Fecha, 3=Conf Fecha, 4=Conf Alarma
 subestado:      .byte 1     // 0=Izquierda, 1=Derecha
 digito_activo:  .byte 1     // 0 a 3 para multiplexado
 banderas:       .byte 1     // Bit0 = Alarma ON/OFF
@@ -99,7 +99,7 @@ OUT     SPH, R16
     STS cont_500ms_L, R16
     STS cont_500ms_H, R16
 
-
+	// --- Valores iniciales de Hora (23:59:50) ---
 	LDI R16, 50            
     STS segundos, R16
     LDI R16, 9
@@ -122,13 +122,13 @@ OUT     SPH, R16
     LDI R16, 1
     STS meses_d, R16     // 1 decena de mes (12)
 
-    // --- Valores iniciales de Alarma  ---
-    LDI R16, 6
-    STS al_hr_u, R16
-    CLR R16
-    STS al_hr_d, R16
-    STS al_min_u, R16
-    STS al_min_d, R16
+    // --- Valores iniciales de Alarma (00:01) ---
+    LDI R16, 1
+    STS al_min_u, R16     
+    CLR R16               
+    STS al_min_d, R16   
+    STS al_hr_u, R16      
+    STS al_hr_d, R16       
 
     SEI // Habilitar interrupciones globales
 
