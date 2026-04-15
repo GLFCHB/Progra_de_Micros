@@ -136,6 +136,13 @@ int main(void)
             decenas = (valor_calibrado >> 4); 
             // Usamos una máscara 00001111 para borrar lo de la izquierda y quedarnos con el dígito bajo
             unidades = (valor_calibrado & 0x0F); 
+            
+            // LÓGICA DEL POSTLAB
+            if (valor_calibrado == contador_leds) {
+                PORTC |= (1 << PORTC0); // SET: Encender LED en A0 (PC0) si hacen match
+            } else {
+                PORTC &= ~(1 << PORTC0); // CLEAR: Apagar LED si son diferentes
+            }
         }
     }
 }
@@ -192,54 +199,58 @@ void initTMR0(void)
 
 uint8_t leerADC(void)
 {
-    ADCSRA |= (1 << ADSC); 
-    while (ADCSRA & (1 << ADSC)); 
-    return ADCH; 
+    ADCSRA |= (1 << ADSC); // SET: Escribir un 1 en ADSC inicia la conversión analógica.
+    while (ADCSRA & (1 << ADSC)); // Ciclo de espera: El micro se queda atascado aquí mientras ADSC siga siendo 1.
+    return ADCH; // Retorna los 8 bits superiores del resultado.
 }
 
 void mostrar_numero(uint8_t num) {
+    // Primero, CLEAR a todos los segmentos para evitar sombras o valores fantasma del dígito anterior
     PORTC &= ~((1<<PORTC1) | (1<<PORTC2) | (1<<PORTC3) | (1<<PORTC4) | (1<<PORTC5));
     PORTB &= ~((1<<PORTB2) | (1<<PORTB3));
 
-    // Carga el patrón de bits
+    // Carga el patrón de bits desde el arreglo según el número solicitado
     uint8_t bits = display[num];
 
- 
+    // Se evalúa bit por bit usando AND lógico. Si el bit es 1, se enciende el segmento correspondiente.
     if(bits & 0x01) PORTC |= (1<<PORTC1); // Segmento 'a'
-    if(bits & 0x02) PORTC |= (1<<PORTC2); 
-    if(bits & 0x04) PORTC |= (1<<PORTC3); 
-    if(bits & 0x08) PORTC |= (1<<PORTC4);
-    if(bits & 0x10) PORTC |= (1<<PORTC5);
-    if(bits & 0x20) PORTB |= (1<<PORTB2);
-    if(bits & 0x40) PORTB |= (1<<PORTB3); 
+    if(bits & 0x02) PORTC |= (1<<PORTC2); // Segmento 'b'
+    if(bits & 0x04) PORTC |= (1<<PORTC3); // Segmento 'c'
+    if(bits & 0x08) PORTC |= (1<<PORTC4); // Segmento 'd'
+    if(bits & 0x10) PORTC |= (1<<PORTC5); // Segmento 'e'
+    if(bits & 0x20) PORTB |= (1<<PORTB2); // Segmento 'f'
+    if(bits & 0x40) PORTB |= (1<<PORTB3); // Segmento 'g'
 }
 
 // RUTINAS DE INTERRUPCIÓN (ISR)
 
+// Esta interrupción se ejecuta cada vez que el Timer0 tiene overflow (aprox. cada 1 milisegundo)
 ISR(TIMER0_OVF_vect)
 {
+    // Apagamos ambos transistores de multiplexado
     PORTB &= ~((1 << PORTB4) | (1 << PORTB5)); 
     
-    // Multiplexado 
+    // Multiplexado rápido: Solo se enciende un display a la vez.
     if (display_actual == 0) {
-        mostrar_numero(decenas); 
-        PORTB |= (1 << PORTB5);
-        display_actual = 1; 
+        mostrar_numero(decenas); // Carga la forma del dígito en los pines
+        PORTB |= (1 << PORTB5); // SET: Enciende el transistor del dígito izquierdo
+        display_actual = 1; // Cambia de turno
     } else {
         mostrar_numero(unidades);
-        PORTB |= (1 << PORTB4); 
+        PORTB |= (1 << PORTB4); // SET: Enciende el transistor del dígito derecho
         display_actual = 0;
     }
 
+    // Como la interrupción ocurre cada 1ms, usamos contadores para medir tiempos más grandes
     tick_botones++;
     if (tick_botones >= 16) { 
-        flag_timer = 1;
+        flag_timer = 1; // Levanta la bandera para leer botones (antirrebote de 16ms)
         tick_botones = 0;
     }
 
     tick_adc++;
     if (tick_adc >= 100) {
-        flag_adc = 1; 
+        flag_adc = 1; // Levanta la bandera para actualizar la lectura del potenciómetro cada 100ms
         tick_adc = 0;
     }
 }

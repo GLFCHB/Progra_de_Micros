@@ -1,7 +1,7 @@
 /*
- * Prelab4_Parte1.c
+ * Prelab4.c
  *
- * Created: 07/04/2026
+ * Created: 01/04/2026
  * Author: Luis Chacón
  * Description: Contador binario de 8 bits 
  */
