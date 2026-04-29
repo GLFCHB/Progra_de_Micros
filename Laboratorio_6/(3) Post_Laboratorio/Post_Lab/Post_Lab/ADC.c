@@ -1,5 +1,3 @@
-Para un lab pasado hice una librería de ADC, la podemos usar?
-ADC.c:
 #include "ADC.h"
 
 void ADC_init(void) {
@@ -18,4 +16,3 @@ uint16_t ADC_read(uint8_t canal) {
 	while((ADCSRA) & (1<<ADSC));             // Esperar a que termine
 	return (ADC);
 }
-
